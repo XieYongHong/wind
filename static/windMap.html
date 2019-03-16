@@ -39,13 +39,21 @@
             dom: 'map'
         })
         map.init()
-
+        var login = function() {
+            $.ajax({
+                type: "get",
+                url: "/login",
+                data: {},
+                success: function (data) {
+                    console.log(data);
+                }
+            });
+        }
         var getMarkers = function(){
             $.ajax({
-                type: "method",
-                url: "url",
-                data: "data",
-                dataType: "dataType",
+                type: "get",
+                url: "/getWorkOrder",
+                data: {},
                 success: function (response) {
                     
                 }
@@ -64,6 +72,7 @@
                 console.log('连接中断');
             }
         }
+        getMarkers()
     </script>
 </body>
 

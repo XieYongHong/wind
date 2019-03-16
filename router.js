@@ -5,8 +5,25 @@ const {port, host} = require('./config.js')
 const fs = require('fs')
 const path = require('path')
 const buffer = require('buffer')
+const http = require('http')
 
 const client = net.Socket()
+
+const userData = {
+    method:'loginSystem',
+    userName:'12345677',
+    pwd:'12345688',
+    customType:1
+}
+
+const opt = {
+    host:'www.gps165.com',
+    method: 'get',
+    path: '/MobileApi/MobileService.ashx',
+    headers: {
+        "Content-Type": 'application/json',
+    }
+}
 
 client.connect(port, host, () => {
     console.log('connection');
@@ -22,14 +39,30 @@ client.on('error', () => {
 })
 
 const send = data => {
-    console.log(JSON.stringify(data));
     let a =  Buffer.from(JSON.stringify(data))
     const buf1 = Buffer.alloc(4 + a.length);
-    buf1[0] = a.length
-    console.log(buf1[0])
+    buf1[3] = a.length
     buf1.write(JSON.stringify(data),4,a.length)
     client.write(buf1)
 }
+
+router.get('/login', async ctx => {
+    var body =''
+    var req = http.request(opt, res => {
+        res.on('data', data => {
+            body += data
+            console.log(data);
+        }).on('end', () => {
+            console.log(body);
+        })
+    }).on('error', e => {
+        console.log(e);
+    })
+    
+    ctx.body = {
+
+    }
+})
 
 router.get('/regionMap', ctx => {
 
@@ -78,9 +111,25 @@ const revied = () => {
     return new Promise((resolve, reject) => {
         client.on('data', data => {
             console.log('>>>>',data.toString())
-            resolve(data.toString())
+            resolve(data)
         })
     })
+}
+
+const KoaRequest = ctx => {
+    return new Promise((resolve, reject) => {
+        ctx.request({
+            host:'http://www.gps165.com',
+            method: 'get',
+            path: '/MobileApi/MobileService.ashx',
+            headers: {
+                "Content-Type": 'application/json',
+            }
+        }, res => {
+
+        })
+    })
+
 }
 
 module.exports = router

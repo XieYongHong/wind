@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>智慧风场</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <div class="content">
+        <div id="map"></div>
+        <div class="legend">
+            <ul>
+                <li>
+                    <div>望江风场</div>
+                    <div>0</div>
+                    <div>4</div>
+                    <div>0</div>
+                </li>
+                <li>
+                    <div>芳地坪风场</div>
+                    <div>0</div>
+                    <div>4</div>
+                    <div>0</div>
+                </li>
+                <li>
+                    <div>凉水泉</div>
+                    <div>0</div>
+                    <div>4</div>
+                    <div>0</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=gSopVcsvgn0uSpjMBbR3nhvBvkYb1W70"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/map.js"></script>
+    <script>
+        var map = new Map({
+            dom: 'map'
+        })
+        map.init()
+        
+        var getMarkers = function(){
+            $.ajax({
+                type: "method",
+                url: "url",
+                data: "data",
+                dataType: "dataType",
+                success: function (response) {
+                    
+                }
+            });
+        }
+
+        var getOrderData = function(){
+            $.ajax({
+                type: "method",
+                url: "url",
+                data: "data",
+                dataType: "dataType",
+                success: function (response) {
+                    
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -22,16 +22,19 @@ Map.prototype.addMarker = function(data) {
         for(var i=0;i<data.length;i++){
             var icon = new BMap.Icon(
                 data[i].iconUrl,
-                new BMap.Size(data[i].w, data[i].h)
-                )
-            var marker = new BMap.Marker(new BMap.Point(data[i].lng,data[i].lat), {icon: icon})
+                new BMap.Size(data[i].w, data[i].h),
+                {
+                    imageOffset:[data[i].imageOffset[0], data[i].imageOffset[1]]  
+                })
+            var marker = new BMap.Marker(new BMap.Point(data[i].longitude,data[i].latitude), {icon: icon})
+            marker.data = data[i]
             this._map.addOverlay(marker)
             addClickHandler(marker)
         }
 
         function addClickHandler(marker){
             marker.addEventListener('click', function(e){
-                console.log(e);
+                console.log(marker.data);
             })
         }
     }

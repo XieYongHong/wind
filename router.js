@@ -5,25 +5,11 @@ const {port, host} = require('./config.js')
 const fs = require('fs')
 const path = require('path')
 const buffer = require('buffer')
-const http = require('http')
-
 const client = net.Socket()
 
-const userData = {
-    method:'loginSystem',
-    userName:'12345677',
-    pwd:'12345688',
-    customType:1
-}
 
-const opt = {
-    host:'www.gps165.com',
-    method: 'get',
-    path: '/MobileApi/MobileService.ashx',
-    headers: {
-        "Content-Type": 'application/json',
-    }
-}
+
+
 
 client.connect(port, host, () => {
     console.log('connection');
@@ -34,8 +20,8 @@ client.on('end', () => {
     console.log('data end')
 })
 
-client.on('error', () => {
-    console.log('error')
+client.on('error', (e) => {
+    console.log('error',e)
 })
 
 const send = data => {
@@ -43,26 +29,9 @@ const send = data => {
     const buf1 = Buffer.alloc(4 + a.length);
     buf1[3] = a.length
     buf1.write(JSON.stringify(data),4,a.length)
+    console.log(buf1.toString());
     client.write(buf1)
 }
-
-router.get('/login', async ctx => {
-    var body =''
-    var req = http.request(opt, res => {
-        res.on('data', data => {
-            body += data
-            console.log(data);
-        }).on('end', () => {
-            console.log(body);
-        })
-    }).on('error', e => {
-        console.log(e);
-    })
-    
-    ctx.body = {
-
-    }
-})
 
 router.get('/regionMap', ctx => {
 
@@ -71,8 +40,8 @@ router.get('/regionMap', ctx => {
     })
 })
 
-router.get('/getWindMarker', async ctx => {
-    send({path:'getWindMarker'})
+router.get('/getWindList', async ctx => {
+    send({mode:'getWindList'})
 
     const data = await revied()
 
@@ -83,8 +52,8 @@ router.get('/getWindMarker', async ctx => {
     }  
 })
 
-router.get('/getAreaMarker', async ctx => {
-    send({path:'getAreaMarker'})
+router.get('/getAreaList', async ctx => {
+    send({mode:'area'})
 
     const data = await revied()
 
@@ -96,22 +65,27 @@ router.get('/getAreaMarker', async ctx => {
 })
 
 router.get('/getWorkOrder', async ctx => {
-    send({path:'getWorkOrder'})
+    send({mode:'turbine'})
 
     const data = await revied()
-
+    // ctx.set({
+    //     "Content-Type": "application/json;charset=utf8"
+    // })
+    console.log('turbine',data);
     return ctx.body = {
         msg: '成功',
         code: 200,
-        data: data
+        data: JSON.parse(data)
     }  
 })
 
 const revied = () => {
     return new Promise((resolve, reject) => {
         client.on('data', data => {
-            console.log('>>>>',data.toString())
-            resolve(data)
+            console.log(data);
+            const data2 = data.toString('utf8',4)
+            console.log('data',data2)
+            resolve(data2)
         })
     })
 }

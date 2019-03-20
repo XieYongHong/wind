@@ -1,18 +1,14 @@
 const Koa = require('koa')
-const {port2} = require('./config.js')
-const router = require('./router.js')
+const {port2, userData} = require('./config.js')
 const bodyparser = require('koa-bodyparser')
 const static = require('koa-static')
 const request = require('request')
+const websocket = require('koa-websocket')
+const router = require('./router.js')
+const webRouter = require('./websocket.js')
+const client = require('./client')
 
-const app = new Koa()
-
-const userData = {
-    method:'loginSystem',
-    userName:'12345677',
-    pwd:'12345688',
-    customType:1
-}
+const app = websocket(new Koa())
 
 const opt = {
     host:'http://www.gps165.com',
@@ -24,29 +20,19 @@ const opt = {
 }
 
 request(opt.host+opt.path, (error, response, body) => {
-    console.log('body', body);
-    if(body.Success){
-        console.log('body', body);
-    }
-})
-
-app.use(async (ctx,next) => {
-    ctx.set({
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,Content-Length, Authorization, Accept,X-Requested-With",
-        "Access-Control-Allow-Methods": "PUT,POST,GET,DELETE,OPTIONS",
-        // "Content-Type": "application/json;charset=utf8"
-    })
-    if(ctx.req.method == 'OPTIONS'){
-        ctx.body = {}
-    }else{
-        await next()
+    var data = JSON.parse(body)
+    if(data.Success){
+        userData.customID = data.CustomID
+        userData.servceKey = data.ServiceKey
+        userData.UserName = data.UserName
+        userData.WebServer = data.WebServer
     }
 })
 
 app.use(static(__dirname+'/static'))
 app.use(bodyparser())
 app.use(router.routes())
+app.ws.use(webRouter.routes())
 
 app.listen(port2, () => {
     console.log(`启动服务器,端口：${port2}`);

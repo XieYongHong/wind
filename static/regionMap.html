@@ -12,26 +12,9 @@
 <body>
     <div class="content">
         <div id="map"></div>
-        <div class="legend">
+        <div class="legend" id="legend">
             <ul>
-                <li>
-                    <div>望江风场</div>
-                    <div>0</div>
-                    <div>4</div>
-                    <div>0</div>
-                </li>
-                <li>
-                    <div>芳地坪风场</div>
-                    <div>0</div>
-                    <div>4</div>
-                    <div>0</div>
-                </li>
-                <li>
-                    <div>凉水泉</div>
-                    <div>0</div>
-                    <div>4</div>
-                    <div>0</div>
-                </li>
+                
             </ul>
         </div>
     </div>
@@ -46,28 +29,84 @@
         
         var getMarkers = function(){
             $.ajax({
-                type: "method",
-                url: "url",
-                data: "data",
-                dataType: "dataType",
-                success: function (response) {
-                    
+                type: "get",
+                url: "/getAreaList",
+                success: function (data) {
+                    if(data.code == 200){
+                        var datas = data.data
+                        var arr = []
+                        var str = ''
+                        if(datas.length){
+                            datas.forEach(a => {
+                                a.iconUrl = '/img/Farm.png'
+                                a.w = 52
+                                a.h = 49
+                                a.anchor = [25, 25]
+                                if(a.type == 2){
+                                    a.iconUrl = '/img/SpareParts.png'
+                                    a.w = 61
+                                    a.h = 44
+                                    a.anchor = [30, 22]
+                                }else{
+                                    str += '<li id="'+a.id+'"><div class="title"><img src="/img/Farm.png"><div>'
+                                            +a.name+'</div></div><div class="number fault">'
+                                            +a.fault+'</div><div class="number hand">'
+                                            +a.hand+'</div><div class="number warning">'
+                                            +a.warning+'</div><div class="number maintain">'
+                                            +a.maintain+'</div></li>'
+                                }
+                                arr.push(a)
+                            });
+                            $('#legend ul').append(str)
+                            map.addMarker(arr, function(data){
+                                console.log(data);
+                                if(data){
+                                    if(data.type != 2){
+                                        $.ajax({
+                                            type: 'post',
+                                            url: 'map',
+                                            data: {
+                                                id:data.id,
+                                                lng:data.longitude,
+                                                lat:data.latitude,
+                                            },
+                                            success: function(data){
+
+                                            }
+                                        })
+                                    }
+                                }
+                            })
+                        }
+                    }
                 }
             });
         }
 
-        var getOrderData = function(){
-            $.ajax({
-                type: "method",
-                url: "url",
-                data: "data",
-                dataType: "dataType",
-                success: function (response) {
-                    
+        var RealTimeMarker = function() {
+            var ws = new WebSocket('ws://localhost:8081/updatefarm')
+            ws.onopen = function(){
+                console.log('连接成功');
+            }
+            ws.onmessage = function(data) {
+                console.log(data.data);
+                if(data.data){
+                    var obj = JSON.parse(data.data)
+                    var datas = obj.datas
+                    for(var i=0;i<datas.length;i++){
+                        $('#'+datas[i].id+' .fault').text(datas[i].fault)
+                        $('#'+datas[i].id+' .hand').text(datas[i].hand)
+                        $('#'+datas[i].id+' .warning').text(datas[i].warning)
+                        $('#'+datas[i].id+' .maintain').text(datas[i].maintain)
+                    }
                 }
-            });
+            }
+            ws.onclose = function(){
+                console.log('连接中断');
+            }
         }
         getMarkers()
+        RealTimeMarker()
     </script>
 </body>
 

@@ -33,6 +33,37 @@ ul,li{
     float: left;
 }
 .legend .work-order{
-    height: 30px;
+    height: 55px;
     width: 30px;
+}
+#legend{
+    max-height: 270px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#legend li{
+    clear: both;
+}
+#legend li>div{
+    float: left;
+}
+#legend image{
+    width: 38px
+}
+#legend .title{
+    width: 80px;
+    text-align: center;
+}
+#legend .number{
+    width: 50px;
+    line-height: 70px;
+}
+.legend .warning{
+
+}
+.legend .error{
+
+}
+.legend .maintain{
+
 }

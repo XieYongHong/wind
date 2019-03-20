@@ -1,28 +1,8 @@
 const Router = require('koa-router')
 const router = new Router()
-const net = require('net');
-const {port, host} = require('./config.js')
 const fs = require('fs')
-const path = require('path')
-const buffer = require('buffer')
-const client = net.Socket()
-
-
-
-
-
-client.connect(port, host, () => {
-    console.log('connection');
-    // client.write('{"one":123}')
-})
-
-client.on('end', () => {
-    console.log('data end')
-})
-
-client.on('error', (e) => {
-    console.log('error',e)
-})
+const iconv = require('iconv-lite')
+const client = require('./client')
 
 const send = data => {
     let a =  Buffer.from(JSON.stringify(data))
@@ -33,30 +13,33 @@ const send = data => {
     client.write(buf1)
 }
 
-router.get('/regionMap', ctx => {
-
-    ctx.body = render('regionMap',{
-        title:'test'
-    })
+//返回页面
+router.get('/regionMap', async ctx => {
+    ctx.set({'Content-Type':'text/html'})
+    const data = await pageHtml('regionMap')
+    ctx.body = data
 })
 
-router.get('/getWindList', async ctx => {
-    send({mode:'getWindList'})
+router.get('/windMap', async ctx => {
+    ctx.set({'Content-Type':'text/html'})
+    const data = await pageHtml('windMap')
+    ctx.body =  data
+})
 
-    const data = await revied()
-
+router.post('/map', async ctx => {
+    var data = ctx.request.body
+    send({url:`localhost/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
     return ctx.body = {
         msg: '成功',
-        code: 200,
-        data: JSON.parse(data)
+        code: 200
     }  
 })
 
+// 数据请求接口
 router.get('/getAreaList', async ctx => {
     send({mode:'area'})
 
     const data = await revied()
-
     return ctx.body = {
         msg: '成功',
         code: 200,
@@ -64,14 +47,10 @@ router.get('/getAreaList', async ctx => {
     }  
 })
 
-router.get('/getWorkOrder', async ctx => {
-    send({mode:'turbine'})
-
+router.get('/getWorkOrder/:id', async ctx => {
+    var id = ctx.params.id
+    send({mode:'farm',id:id})
     const data = await revied()
-    // ctx.set({
-    //     "Content-Type": "application/json;charset=utf8"
-    // })
-    console.log('turbine',data);
     return ctx.body = {
         msg: '成功',
         code: 200,
@@ -82,28 +61,31 @@ router.get('/getWorkOrder', async ctx => {
 const revied = () => {
     return new Promise((resolve, reject) => {
         client.on('data', data => {
-            console.log(data);
-            const data2 = data.toString('utf8',4)
-            console.log('data',data2)
-            resolve(data2)
-        })
-    })
-}
-
-const KoaRequest = ctx => {
-    return new Promise((resolve, reject) => {
-        ctx.request({
-            host:'http://www.gps165.com',
-            method: 'get',
-            path: '/MobileApi/MobileService.ashx',
-            headers: {
-                "Content-Type": 'application/json',
+            if(data.length != 4){
+                const data2 = data.toString()
+                // console.log(data2);
+                try {
+                    var obj = JSON.parse(data2)
+                } catch (error) {
+                    console.log(error);
+                }
+                if(obj.mode == 'getaddr'){
+                    send({url:'localhost/regionMap'})
+                }else if(!obj.mode){
+                    resolve(data2)
+                }
             }
-        }, res => {
-
         })
     })
-
 }
+
+const pageHtml = url => {
+    return new Promise((resolve, reject) => {
+        fs.readFile(`./static/${url}.html`,function readData(err,data){
+            resolve(data)
+        })
+    })
+}
+
 
 module.exports = router

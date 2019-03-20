@@ -14,6 +14,9 @@ router.all('/updatefarm', ctx => {
     ctx.websocket.on('message', data => {
         console.log(data);
     })
+    ctx.websocket.on('close', e => {
+        websocket1 = null
+    })
 })
 
 router.all('/updateturbine', ctx => {
@@ -23,6 +26,9 @@ router.all('/updateturbine', ctx => {
     })
     ctx.websocket.on('message', data => {
         console.log(data);
+    })
+    ctx.websocket.on('close', e => {
+        websocket2 = null
     })
 })
 
@@ -38,7 +44,7 @@ router.all('/getCarList', async ctx => {
         }
     }
 
-    setInterval(function(){
+    const timer = setInterval(function(){
         getCar()
     },20000)
     
@@ -55,6 +61,10 @@ router.all('/getCarList', async ctx => {
         }
     }
     getCar()
+
+    ctx.websocket.on('close', e => {
+        clearInterval(timer)
+    })
 })
 
 client.on('data', data => {
@@ -62,8 +72,10 @@ client.on('data', data => {
         const data2 = data.toString()
         const obj = JSON.parse(data2)
         if(obj.mode == 'updatefarmlist'){
+            if(websocket1)
             websocket1.send(data2)
         }else if(obj.mode == 'updateturbinelist'){
+            if(websocket2)
             websocket2.send(data2)
         }
     }

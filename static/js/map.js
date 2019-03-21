@@ -4,8 +4,153 @@ function Map(config) {
     this._zoom = config.zoom || 11
     this._map = null
     this._style = {
-        features: ["road", "building","water","land"], // 展示元素种类
-        style: 'midnight' // 地图底图样式
+        // features: ["road", "building","water","land"], // 展示元素种类
+        // style: 'midnight' // 地图底图样式
+        styleJson:[
+                {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": {
+                                    "color": "#021019"
+                        }
+                },
+                {
+                        "featureType": "highway",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "highway",
+                        "elementType": "geometry.stroke",
+                        "stylers": {
+                                    "color": "#147a92"
+                        }
+                },
+                {
+                        "featureType": "arterial",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "arterial",
+                        "elementType": "geometry.stroke",
+                        "stylers": {
+                                    "color": "#0b3d51"
+                        }
+                },
+                {
+                        "featureType": "local",
+                        "elementType": "geometry",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "land",
+                        "elementType": "all",
+                        "stylers": {
+                                    "color": "#08304b"
+                        }
+                },
+                {
+                        "featureType": "railway",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "railway",
+                        "elementType": "geometry.stroke",
+                        "stylers": {
+                                    "color": "#08304b"
+                        }
+                },
+                {
+                        "featureType": "subway",
+                        "elementType": "geometry",
+                        "stylers": {
+                                    "lightness": -70
+                        }
+                },
+                {
+                        "featureType": "building",
+                        "elementType": "geometry.fill",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "all",
+                        "elementType": "labels.text.fill",
+                        "stylers": {
+                                    "color": "#857f7f"
+                        }
+                },
+                {
+                        "featureType": "all",
+                        "elementType": "labels.text.stroke",
+                        "stylers": {
+                                    "color": "#000000"
+                        }
+                },
+                {
+                        "featureType": "building",
+                        "elementType": "geometry",
+                        "stylers": {
+                                    "color": "#022338"
+                        }
+                },
+                {
+                        "featureType": "green",
+                        "elementType": "geometry",
+                        "stylers": {
+                                    "color": "#062032"
+                        }
+                },
+                {
+                        "featureType": "boundary",
+                        "elementType": "all",
+                        "stylers": {
+                                    "color": "#1e1c1c"
+                        }
+                },
+                {
+                        "featureType": "manmade",
+                        "elementType": "geometry",
+                        "stylers": {
+                                    "color": "#022338"
+                        }
+                },
+                {
+                        "featureType": "poi",
+                        "elementType": "all",
+                        "stylers": {
+                                    "visibility": "off"
+                        }
+                },
+                {
+                        "featureType": "road",
+                        "elementType": "all",
+                        "stylers": {
+                                    "color": "#163879ff",
+                                    "weight": "1",
+                                    "lightness": 1,
+                                    "saturation": 1
+                        }
+                },
+                {
+                        "featureType": "background",
+                        "elementType": "all",
+                        "stylers": {
+                                    "color": "#0A1836"
+                        }
+                }
+        ]
     }
 }
 
@@ -14,7 +159,6 @@ Map.prototype.init = function() {
     _map.centerAndZoom(new BMap.Point(this._center[0], this._center[1]), this._zoom)
     _map.enableScrollWheelZoom(true);
     _map.setMapStyle(this._style)
-    console.log(_map);
 }
 
 Map.prototype.addMarker = function(data, callback) {
@@ -110,6 +254,40 @@ ComplexCustomOverlay.prototype.initialize = function(map){
     return div
 }
 ComplexCustomOverlay.prototype.draw = function(){
+    var map = this._map
+    var pixel = map.pointToOverlayPixel(new BMap.Point(this.data.longitude, this.data.latitude));
+    this._div.style.left = pixel.x - this.data.anchor[0] + "px";
+    this._div.style.top  = pixel.y - 28 - this.data.anchor[1] + "px";
+}
+
+function farmCustomOverlay(data,map){
+    this.data = data
+    this.mp = map
+}
+farmCustomOverlay.prototype = new BMap.Overlay();
+farmCustomOverlay.prototype.initialize = function(map){
+    this._map = map
+    var div = this._div = document.createElement('div')
+    var img = this._img = document.createElement('div')
+    var id = this._id = document.createElement('div')
+    div.style.position = 'absolute'
+    div.style.zIndex = this.data.latitude
+    div.style.whiteSpace = "nowrap";
+    div.style.MozUserSelect = "none";
+    div.style.textAlign = 'center'
+    div.style.fontSize = "13px"
+    div.style.color = "#ffffff"
+    div.style.height = '110px'
+    div.style.width = '40px'
+    img.style.height = '70px'
+    img.style.background = 'url('+this.data.iconUrl+') no-repeat'
+    id.innerText = this.data.name
+    div.appendChild(img)
+    div.appendChild(id)
+    this.mp._map.getPanes().labelPane.appendChild(div)
+    return div
+}
+farmCustomOverlay.prototype.draw = function(){
     var map = this._map
     var pixel = map.pointToOverlayPixel(new BMap.Point(this.data.longitude, this.data.latitude));
     this._div.style.left = pixel.x - this.data.anchor[0] + "px";

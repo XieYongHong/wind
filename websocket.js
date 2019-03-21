@@ -36,6 +36,7 @@ router.all('/getCarList', async ctx => {
     console.log(userData);
     const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getMyDevicesInfo&customID=${userData.customID}&serviceKey=${userData.servceKey}&customType=1`
     const obj = await requestData(url)
+    let webStatus = true
     let _data = null
 
     for(var item in obj){
@@ -55,7 +56,7 @@ router.all('/getCarList', async ctx => {
             const obj = await requestData(url)
             console.log(i,obj);
             arr.push(obj)
-            if(i == _data.length-1){
+            if(i == _data.length-1 && webStatus){
                 ctx.websocket.send(JSON.stringify(arr))
             }
         }
@@ -63,20 +64,25 @@ router.all('/getCarList', async ctx => {
     getCar()
 
     ctx.websocket.on('close', e => {
+        webStatus = false
         clearInterval(timer)
     })
 })
 
 client.on('data', data => {
+    console.log('websocket',data);
     if(data.length != 4){
         const data2 = data.toString()
+        console.log('websocket2',data2);
         const obj = JSON.parse(data2)
         if(obj.mode == 'updatefarmlist'){
-            if(websocket1)
-            websocket1.send(data2)
+            if(websocket1){
+                websocket1.send(data2)
+            }
         }else if(obj.mode == 'updateturbinelist'){
-            if(websocket2)
-            websocket2.send(data2)
+            if(websocket2){
+                websocket2.send(data2)
+            }
         }
     }
 })

@@ -1,7 +1,6 @@
 const Router = require('koa-router')
 const router = new Router()
 const fs = require('fs')
-const iconv = require('iconv-lite')
 const client = require('./client')
 
 const send = data => {
@@ -28,7 +27,7 @@ router.get('/windMap', async ctx => {
 
 router.post('/map', async ctx => {
     var data = ctx.request.body
-    send({url:`localhost/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
+    send({url:`localhost:8081/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
     return ctx.body = {
         msg: '成功',
         code: 200
@@ -39,7 +38,7 @@ router.post('/map', async ctx => {
 router.get('/getAreaList', async ctx => {
     send({mode:'area'})
 
-    const data = await revied()
+    const data = await revied()                                                          
     return ctx.body = {
         msg: '成功',
         code: 200,
@@ -61,6 +60,7 @@ router.get('/getWorkOrder/:id', async ctx => {
 const revied = () => {
     return new Promise((resolve, reject) => {
         client.on('data', data => {
+            console.log('router',data);
             if(data.length != 4){
                 const data2 = data.toString()
                 // console.log(data2);

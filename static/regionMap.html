@@ -37,7 +37,8 @@
                         var arr = []
                         var str = ''
                         if(datas.length){
-                            datas.forEach(a => {
+                            datas.forEach(function(a){
+                                
                                 a.iconUrl = '/img/Farm.png'
                                 a.w = 52
                                 a.h = 49
@@ -55,6 +56,20 @@
                                             +a.warning+'</div><div class="number maintain">'
                                             +a.maintain+'</div></li>'
                                 }
+                                        var label = new BMap.Label(a.name,{
+                                            position: new BMap.Point(a.longitude, a.latitude),
+                                            offset: new BMap.Size(-31, 30)
+                                        })
+                                        label.setStyle({
+                                            color : "#fff",
+                                            fontSize : "12px",
+                                            height : "20px",
+                                            lineHeight : "20px",
+                                            fontFamily:"微软雅黑",
+                                            border:'none',
+                                            backgroundColor:'transparent'
+                                        });
+                                        map._map.addOverlay(label)
                                 arr.push(a)
                             });
                             $('#legend ul').append(str)

@@ -11,6 +11,12 @@ ul,li{
     margin: 0;
     list-style: none;
 }
+.BMap_cpyCtrl {
+    display:none;
+}
+.anchorBL{
+    display:none;
+}
 .content,#map{
     width: 100%;
     height: 100%;

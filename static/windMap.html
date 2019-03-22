@@ -31,30 +31,41 @@
             </div>
             <div>
                 <img src="/img/WT_Offline.png" class="work-order">
-                <span>离线工单</span>
+                <span>离线</span>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=gSopVcsvgn0uSpjMBbR3nhvBvkYb1W70"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=gSopVcsvgn0uSpjMBbR3nhvBvkYb1W70">
+    </script>
     <script src="js/jquery.min.js"></script>
     <script src="js/map.js"></script>
     <script>
         var map
-        var getCarList = function() {
+        var labels = []
+        var getCarList = function (data) {
             var ws = new WebSocket('ws://localhost:8081/getCarList')
-            ws.onopen = function(){
+            ws.onopen = function () {
                 console.log('连接成功');
+                if (data) {
+                    console.log(JSON.stringify(data));
+                    ws.send(JSON.stringify(data))
+                }
             }
-            ws.onmessage = function(data) {
+            ws.onmessage = function (data) {
                 console.log(data.data);
-                if(data.data){
+                if (data.data) {
                     var arr = JSON.parse(data.data)
                     var datas = []
-                    for(var i=0;i<arr.length;i++){
-                        if(arr[i].lao){
+                    map.removeMarker(labels)
+                    labels = []
+                    for (var i = 0; i < arr.length; i++) {
+                        if (arr[i].lao) {
                             var lnglat = arr[i].lao.split('/')
                             var obj = {
-                                iconUrl: arr[i].st == 'off' ? '/img/car_stop.png' :'/img/car_move.gif',
+                                name:arr[i].name,
+                                dt: arr[i].dt,
+                                st: arr[i].st,
+                                iconUrl: arr[i].st == 'off' ? '/img/car_stop.png' : '/img/car_move.gif',
                                 w: 42,
                                 h: 31,
                                 longitude: lnglat[1],
@@ -65,87 +76,106 @@
                             }
                             console.log(obj);
                             datas.push(obj)
+                            var label = new BMap.Label(arr[i].name, {
+                                position: new BMap.Point(lnglat[1], lnglat[0]),
+                                offset: new BMap.Size(-28, 20)
+                            })
+                            label.setStyle({
+                                color: "#fff",
+                                fontSize: "12px",
+                                height: "20px",
+                                lineHeight: "20px",
+                                fontFamily: "微软雅黑",
+                                border: 'none',
+                                backgroundColor: 'transparent'
+                            });
+                            labels.push(label)
+                            map._map.addOverlay(label)
                         }
                     }
-                    map.removeMarkerType('car')  
-                    map.addMarker(datas)
+                    map.removeMarkerType('car')
+                    map.addMarker(datas, function(data) {
+                        
+                    }, true)
                 }
             }
-            ws.onclose = function(){
+            ws.onclose = function () {
                 console.log('连接中断');
             }
         }
-        var getMarkers = function(id){
-            if(id)
-            $.ajax({
-                type: "get",
-                url: "/getWorkOrder/"+id,
-                data: {},
-                success: function (data) {
-                    if(data.code == 200){
-                        var datas = data.data
-                        var arr = []
-                        if(datas.length){
-                            datas.forEach(function(a){
-                                a.iconUrl = '/img/Farm.png'
-                                a.w = 52
-                                a.h = 49
-                                a.anchor = [25, 25]
-                                if(a.type == 1){
-                                    switch (a.status) {
-                                        case 1:
-                                            a.iconUrl = '/img/WT_Normal.png'
-                                            break;
-                                        case 2:
-                                            a.iconUrl = '/img/WT_Erro.png'
-                                            break;
-                                        case 3:
-                                            a.iconUrl = '/img/WT_Warning.png'
-                                            break;
-                                        case 4:
-                                            a.iconUrl = '/img/WT_Maintain.png'
-                                            break;
-                                        case 0:
-                                            a.iconUrl = '/img/WT_Offline.png'
-                                            break;
+        var getMarkers = function (id) {
+            if (id)
+                $.ajax({
+                    type: "get",
+                    url: "/getWorkOrder/" + id,
+                    data: {},
+                    success: function (data) {
+                        if (data.code == 200) {
+                            var datas = data.data.farm
+                            console.log(data.data.car);
+                            getCarList(data.data.car)
+                            var arr = []
+                            if (datas.length) {
+                                datas.forEach(function (a) {
+                                    a.iconUrl = '/img/Farm.png'
+                                    a.w = 52
+                                    a.h = 49
+                                    a.anchor = [25, 25]
+                                    if (a.type == 1) {
+                                        switch (a.status) {
+                                            case 1:
+                                                a.iconUrl = '/img/WT_Normal.png'
+                                                break;
+                                            case 2:
+                                                a.iconUrl = '/img/WT_Erro.png'
+                                                break;
+                                            case 3:
+                                                a.iconUrl = '/img/WT_Warning.png'
+                                                break;
+                                            case 4:
+                                                a.iconUrl = '/img/WT_Maintain.png'
+                                                break;
+                                            case 0:
+                                                a.iconUrl = '/img/WT_Offline.png'
+                                                break;
+                                        }
+                                        a.w = 36
+                                        a.h = 70
+                                        a.anchor = [18, 68]
+                                        map.addOverlay(new ComplexCustomOverlay(a, map))
+                                    } else {
+                                        arr.push(a)
                                     }
-                                    a.w = 36
-                                    a.h = 70
-                                    a.anchor = [18, 68]
-                                    map.addOverlay(new ComplexCustomOverlay(a, map))
-                                }else{
-                                    arr.push(a)
-                                }
-                            });
-                            map.addMarker(arr)
+                                });
+                                map.addMarker(arr)
+                            }
                         }
                     }
-                }
-            });
+                });
         }
 
-        var RealTimeMarker = function() {
+        var RealTimeMarker = function () {
             var ws = new WebSocket('ws://localhost:8081/updateturbine')
-            ws.onopen = function(){
+            ws.onopen = function () {
                 console.log('连接成功');
             }
-            ws.onmessage = function(data) {
+            ws.onmessage = function (data) {
                 console.log(data);
-                if(data.data){
+                if (data.data) {
                     var obj = JSON.parse(data.data)
                     var datas = obj.datas
-                    if(map){
+                    if (map) {
                         var list = map._map.getOverlays()
-                        for(var i=0;i<datas.length; i++){
-                            for(var j=0;j<list.length;j++){
-                                if(list[j].data){
-                                    if(datas[i].id == list[j].data.id){
+                        for (var i = 0; i < datas.length; i++) {
+                            for (var j = 0; j < list.length; j++) {
+                                if (list[j].data) {
+                                    if (datas[i].id == list[j].data.id) {
                                         var status = datas[i].status
                                         list[j].data.time = datas[i].time
-                                        switch(status) {
+                                        switch (status) {
                                             case 1:
                                                 list[j].data.iconUrl = '/img/WT_Normal.png'
-                                            break;
+                                                break;
                                             case 2:
                                                 list[j].data.iconUrl = '/img/WT_Erro.png'
                                                 break;
@@ -169,16 +199,16 @@
                     }
                 }
             }
-            ws.onclose = function(){
+            ws.onclose = function () {
                 console.log('连接中断');
             }
         }
 
-        function init(){
+        function init() {
             var url = location.search.substr(1)
             var arr = url.split('&')
             var d = {}
-            for(var i=0; i<arr.length; i++){
+            for (var i = 0; i < arr.length; i++) {
                 var _arr = arr[i].split('=')
                 d[_arr[0]] = _arr[1]
             }
@@ -188,7 +218,6 @@
                 center: [d.lng, d.lat]
             })
             map.init()
-            getCarList()
             getMarkers(d.id)
             RealTimeMarker()
         }

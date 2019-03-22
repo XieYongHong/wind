@@ -60,20 +60,20 @@ router.get('/getWorkOrder/:id', async ctx => {
 const revied = () => {
     return new Promise((resolve, reject) => {
         client.on('data', data => {
-            console.log('router',data);
-            if(data.length != 4){
-                const data2 = data.toString()
-                // console.log(data2);
-                try {
+            try {
+                if(data.length != 4){
+                    const data2 = data.toString()
+                    console.log(data2);
                     var obj = JSON.parse(data2)
-                } catch (error) {
-                    console.log(error);
+
+                    if(obj.mode == 'getaddr'){
+                        send({url:'localhost/regionMap'})
+                    }else if(!obj.mode){
+                        resolve(data2)
+                    }
                 }
-                if(obj.mode == 'getaddr'){
-                    send({url:'localhost/regionMap'})
-                }else if(!obj.mode){
-                    resolve(data2)
-                }
+            } catch (error) {
+                console.log(error);
             }
         })
     })

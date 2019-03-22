@@ -161,7 +161,8 @@ Map.prototype.init = function() {
     _map.setMapStyle(this._style)
 }
 
-Map.prototype.addMarker = function(data, callback) {
+Map.prototype.addMarker = function(data, callback, window) {
+    var map = this._map
     if(data){
         for(var i=0;i<data.length;i++){
             var icon = new BMap.Icon(
@@ -173,13 +174,27 @@ Map.prototype.addMarker = function(data, callback) {
             marker.data = data[i]
             this._map.addOverlay(marker)
             if(callback)
-            addClickHandler(marker, callback)
+            addClickHandler(marker, callback, window)
         }
 
-        function addClickHandler(marker, callback){
+        function addClickHandler(marker, callback, window){
             marker.addEventListener('click', function(e){
                 callback(marker.data)
+                if(window){
+                    openInfo(marker.data, e)
+                }
             })
+        }
+        function openInfo(data,e){
+            console.log(data);
+            var p = e.target;
+            var content = '<div style="width:300px;height:100px;"><div style="margin-bottom:5px;"><span style="font-weight: bold;">名称：</span>'+data.name+'</div>'
+                        + '<div style="margin-bottom:5px;"><span style="font-weight: bold;">坐标：</span>'+p.getPosition().lng + ',' + p.getPosition().lat +'</div>'
+                        + '<div style="margin-bottom:5px;"><span style="font-weight: bold;">状态：</span>'+ (data.st == 'on' ? '在线' : '离线') +'</div>'
+                        + '<div style="margin-bottom:5px;"><span style="font-weight: bold;">时间：</span>'+ data.dt +'</div></div>'
+            var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+            var infoWindow = new BMap.InfoWindow(content,{width:300,height: 100,offset: new BMap.Size(6,1)});  // 创建信息窗口对象 
+            map.openInfoWindow(infoWindow,point); //开启信息窗口
         }
     }
 }
@@ -196,7 +211,7 @@ Map.prototype.removeMarkerType = function(type) {
     if(data){
         for(var i = 0; i < data.length; i++){
             if(data[i].data){
-                if(data[i].data.type == 'car'){
+                if(data[i].data.type == 'car' || data[i].type == 'car'){
                     this._map.removeOverlay(data[i])
                 }
             }
@@ -254,40 +269,6 @@ ComplexCustomOverlay.prototype.initialize = function(map){
     return div
 }
 ComplexCustomOverlay.prototype.draw = function(){
-    var map = this._map
-    var pixel = map.pointToOverlayPixel(new BMap.Point(this.data.longitude, this.data.latitude));
-    this._div.style.left = pixel.x - this.data.anchor[0] + "px";
-    this._div.style.top  = pixel.y - 28 - this.data.anchor[1] + "px";
-}
-
-function farmCustomOverlay(data,map){
-    this.data = data
-    this.mp = map
-}
-farmCustomOverlay.prototype = new BMap.Overlay();
-farmCustomOverlay.prototype.initialize = function(map){
-    this._map = map
-    var div = this._div = document.createElement('div')
-    var img = this._img = document.createElement('div')
-    var id = this._id = document.createElement('div')
-    div.style.position = 'absolute'
-    div.style.zIndex = this.data.latitude
-    div.style.whiteSpace = "nowrap";
-    div.style.MozUserSelect = "none";
-    div.style.textAlign = 'center'
-    div.style.fontSize = "13px"
-    div.style.color = "#ffffff"
-    div.style.height = '110px'
-    div.style.width = '40px'
-    img.style.height = '70px'
-    img.style.background = 'url('+this.data.iconUrl+') no-repeat'
-    id.innerText = this.data.name
-    div.appendChild(img)
-    div.appendChild(id)
-    this.mp._map.getPanes().labelPane.appendChild(div)
-    return div
-}
-farmCustomOverlay.prototype.draw = function(){
     var map = this._map
     var pixel = map.pointToOverlayPixel(new BMap.Point(this.data.longitude, this.data.latitude));
     this._div.style.left = pixel.x - this.data.anchor[0] + "px";

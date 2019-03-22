@@ -57,12 +57,17 @@ ul,li{
     width: 38px
 }
 #legend .title{
-    width: 80px;
+    width: 100px;
     text-align: center;
+    margin-bottom: 7px;
 }
 #legend .number{
-    width: 50px;
+    width: 70px;
     line-height: 70px;
+    font-size: 17px;
+}
+#legend .number>img{
+    margin-right: 10px;
 }
 .legend .warning{
 

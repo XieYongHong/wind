@@ -32,58 +32,72 @@ router.all('/updateturbine', ctx => {
     })
 })
 
-router.all('/getCarList', async ctx => {
+router.all('/getCarList',  ctx => {
     console.log(userData);
-    const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getMyDevicesInfo&customID=${userData.customID}&serviceKey=${userData.servceKey}&customType=1`
-    const obj = await requestData(url)
-    let webStatus = true
-    let _data = null
-
-    for(var item in obj){
-        if(item.indexOf(carName) != -1){
-            _data = obj[item]
-        }
-    }
-
-    const timer = setInterval(function(){
-        getCar()
-    },20000)
+    var timer = null
     
-    async function getCar(){
-        let arr = []
-        for(let i=0;i<_data.length;i++){
-            const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getDeviceGpsInfo&terminalID=${_data[i].TerminalID}&mapType=G_MAP&serviceKey=${userData.servceKey}`
+    ctx.websocket.on('message', async e => {
+        console.log(e);
+        if(e){
+            const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getMyDevicesInfo&customID=${userData.customID}&serviceKey=${userData.servceKey}&customType=1`
             const obj = await requestData(url)
-            console.log(i,obj);
-            arr.push(obj)
-            if(i == _data.length-1 && webStatus){
-                ctx.websocket.send(JSON.stringify(arr))
-            }
-        }
-    }
-    getCar()
+            let webStatus = true
+            let _data = null
 
+            for(var item in obj){
+                if(item.indexOf(carName) != -1){
+                    _data = obj[item]
+                }
+            }
+
+            
+            async function getCar(data){
+                let arr = []
+                for(let j=0;j<data.length;j++){
+                    for(let i=0;i<_data.length;i++){
+                        if(data[j] == _data[i].VehicleNO){
+                            const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getDeviceGpsInfo&terminalID=${_data[i].TerminalID}&mapType=G_MAP&serviceKey=${userData.servceKey}`
+                            const obj = await requestData(url)
+                            obj.name = data[j]
+                            arr.push(obj)
+                            if(j == data.length-1 && webStatus){
+                                return ctx.websocket.send(JSON.stringify(arr))
+                            }
+                        }
+                    }
+                }
+            }
+            const data = JSON.parse(e)
+            getCar(data)
+            timer = setInterval(function(){
+                getCar(data)
+            },20000)
+        }
+    })
     ctx.websocket.on('close', e => {
         webStatus = false
+        if(timer)
         clearInterval(timer)
     })
 })
 
 client.on('data', data => {
-    console.log('websocket',data);
-    if(data.length != 4){
-        const data2 = data.toString()
-        console.log('websocket2',data2);
-        const obj = JSON.parse(data2)
-        if(obj.mode == 'updatefarmlist'){
-            if(websocket1){
-                websocket1.send(data2)
-            }
-        }else if(obj.mode == 'updateturbinelist'){
-            if(websocket2){
-                websocket2.send(data2)
+    try {
+        if(data.length != 4){
+            const data2 = data.toString()
+            const obj = JSON.parse(data2)
+            if(obj.mode == 'updatefarmlist'){
+                if(websocket1){
+                    websocket1.send(data2)
+                }
+            }else if(obj.mode == 'updateturbinelist'){
+                if(websocket2){
+                    websocket2.send(data2)
+                }
             }
         }
+    } catch (error) {
+        
     }
 })
 

@@ -223,17 +223,26 @@ Map.prototype.addOverlay = function(data){
         this._map.addOverlay(data)
     }
 }
-
-function ComplexCustomOverlay(data,map){
+Map.prototype.markersCenter = function(data){
+    if(data.length){
+        var arr = []
+        data.forEach(function(a){
+            arr.push(new BMap.Point(a.longitude, a.latitude))
+        });
+        console.log(arr);
+        this._map.setViewport(arr)
+    }
+}
+function ComplexCustomOverlay(data,map,callback){
     this.data = data
     this.mp = map
+    this.callback = callback
 }
 ComplexCustomOverlay.prototype = new BMap.Overlay();
 ComplexCustomOverlay.prototype.initialize = function(map){
-    var _this = this
     this._map = map
+    var _this = this
     var div = this._div = document.createElement('div')
-    var time = this._time = document.createElement('div')
     var img = this._img = document.createElement('div')
     var id = this._id = document.createElement('div')
     div.style.position = 'absolute'
@@ -243,28 +252,19 @@ ComplexCustomOverlay.prototype.initialize = function(map){
     div.style.textAlign = 'center'
     div.style.fontSize = "13px"
     div.style.color = "#ffffff"
-    div.style.height = '110px'
-    div.style.width = '40px'
-    time.style.height = '20px'
-    img.style.height = '70px'
+    div.style.width = this.data.w + 'px'
+    div.style.height = '70px'
+    img.style.height = this.data.h + 'px'
     img.style.background = 'url('+this.data.iconUrl+') no-repeat'
     id.innerText = this.data.name
-    this.time = 0
-    if(this.data.time){
-        this.timer = setInterval(function(){
-            _this.time += 1
-            _this._time.innerText = _this.data.time - _this.time
-            if(_this.time >= _this.data.time){
-                _this._time.style.visibility = 'hidden'
 
-                img.style.background = 'url("/img/WT_Offline.png") no-repeat'
-                window.clearInterval(_this.timer)
-            }
-        }, 1000)
-    }
-    div.appendChild(time)
     div.appendChild(img)
     div.appendChild(id)
+    if(_this.callback){
+        div.onclick = function(){
+            _this.callback(_this.data)
+        }
+    }
     this.mp._map.getPanes().labelPane.appendChild(div)
     return div
 }

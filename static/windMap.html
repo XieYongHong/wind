@@ -12,7 +12,14 @@
 <body>
     <div class="content">
         <div id="map"></div>
-        <div class="legend">
+        <div id="wtList" >
+            <ul>
+            </ul>
+        </div>
+        <div class="legend" style="top:10px;">
+            <div>
+
+            </div>
             <div>
                 <img src="/img/WT_Normal.png" class="work-order">
                 <span>无工单</span>
@@ -47,12 +54,10 @@
             ws.onopen = function () {
                 console.log('连接成功');
                 if (data) {
-                    console.log(JSON.stringify(data));
                     ws.send(JSON.stringify(data))
                 }
             }
             ws.onmessage = function (data) {
-                console.log(data.data);
                 if (data.data) {
                     var arr = JSON.parse(data.data)
                     var datas = []
@@ -62,7 +67,7 @@
                         if (arr[i].lao) {
                             var lnglat = arr[i].lao.split('/')
                             var obj = {
-                                name:arr[i].name,
+                                name: arr[i].name,
                                 dt: arr[i].dt,
                                 st: arr[i].st,
                                 iconUrl: arr[i].st == 'off' ? '/img/car_stop.png' : '/img/car_move.gif',
@@ -74,7 +79,6 @@
                                 id: arr[i].mid,
                                 type: 'car'
                             }
-                            console.log(obj);
                             datas.push(obj)
                             var label = new BMap.Label(arr[i].name, {
                                 position: new BMap.Point(lnglat[1], lnglat[0]),
@@ -94,8 +98,8 @@
                         }
                     }
                     map.removeMarkerType('car')
-                    map.addMarker(datas, function(data) {
-                        
+                    map.addMarker(datas, function (data) {
+
                     }, true)
                 }
             }
@@ -112,27 +116,26 @@
                     success: function (data) {
                         if (data.code == 200) {
                             var datas = data.data.farm
-                            console.log(data.data.car);
                             getCarList(data.data.car)
                             var arr = []
+                            var str = ''
+                            var showNumber = 0
+                            var point = []
                             if (datas.length) {
                                 datas.forEach(function (a) {
-                                    a.iconUrl = '/img/Farm.png'
-                                    a.w = 52
-                                    a.h = 49
-                                    a.anchor = [25, 25]
+
                                     if (a.type == 1) {
                                         switch (a.status) {
-                                            case 1:
+                                            case 1:// 无工单
                                                 a.iconUrl = '/img/WT_Normal.png'
                                                 break;
-                                            case 2:
+                                            case 2: // 故障
                                                 a.iconUrl = '/img/WT_Erro.png'
                                                 break;
-                                            case 3:
+                                            case 3:// 预警
                                                 a.iconUrl = '/img/WT_Warning.png'
                                                 break;
-                                            case 4:
+                                            case 4:// 运维
                                                 a.iconUrl = '/img/WT_Maintain.png'
                                                 break;
                                             case 0:
@@ -142,18 +145,59 @@
                                         a.w = 36
                                         a.h = 70
                                         a.anchor = [18, 68]
-                                        map.addOverlay(new ComplexCustomOverlay(a, map))
-                                    } else {
-                                        arr.push(a)
+                                        point.push(a)
+                                        if(a.time){
+                                            showNumber += 1
+                                        }
+                                        str += '<li id="' + a.id + '" style="display:'+(a.time >0 ? 'block' : 'none')+'"><span>' + a.name +
+                                            '</span><span class="wtTime">' + handTime(a.time) + '</span></li>'
+                                    } else if (a.type == 3) {
+                                        a.iconUrl = '/img/SpareParts.png'
+                                        a.w = 61
+                                        a.h = 44
+                                        a.anchor = [30, 22]
+                                    } else if (a.type == 2) {
+                                        point.push(a)
+                                        a.iconUrl = '/img/Service_station.png'
+                                        a.w = 73
+                                        a.h = 64
+                                        a.anchor = [36, 32]
                                     }
+                                    
+                                    map.addOverlay(new ComplexCustomOverlay(a, map, function(data){
+                                            console.log(data);
+                                            getOrderId(data.id)
+                                    }))
                                 });
-                                map.addMarker(arr)
+                                if(!showNumber){
+                                    $('#wtList').hide()
+                                }
+                                $('#wtList ul').append(str)
+                                console.log(point);
+                                map.markersCenter(point)
                             }
                         }
                     }
                 });
         }
+        function getOrderId(id){
+            $.ajax({
+                type: "get",
+                url: "/getOrder/" + id,
+                data: {},
+                success: function(data){
 
+                }
+            })
+        }
+        function handTime(time) {
+            if(time == 0) return 0;
+            var day = Math.floor(time / (24 * 60 * 60))
+            var hour = Math.floor((time - (day * 24 * 60 * 60)) / (60 * 60))
+            console.log((time - (day * 24 * 60 * 60) - (hour * 60)));
+            var min = Math.floor((time - (day * 24 * 60 * 60) - (hour * 60 * 60)) / 60)
+            return '预计 ' + day + ' 天 ' + hour + ' 时 ' + min + ' 分后停机'
+        }
         var RealTimeMarker = function () {
             var ws = new WebSocket('ws://localhost:8081/updateturbine')
             ws.onopen = function () {
@@ -189,12 +233,36 @@
                                                 list[j].data.iconUrl = '/img/WT_Offline.png'
                                                 break;
                                         }
+                                        if(datas[i].time){
+                                            $('#' + datas[i].id + ' .wtTime').text(handTime(datas[i].time))
+                                            $('#' + datas[i].id).show()
+                                        }else{
+                                            $('#' + datas[i].id + ' .wtTime').text(handTime(datas[i].time))
+                                            $('#' + datas[i].id).hide()
+                                        }
                                         map._map.removeOverlay(list[j])
-                                        map.addOverlay(new ComplexCustomOverlay(list[j].data, map))
+                                        map.addOverlay(new ComplexCustomOverlay(list[j].data, map, function(data){
+                                            console.log(data);
+                                            getOrderId(data.id)
+                                        }))
                                         break;
                                     }
                                 }
                             }
+                        }
+                        var domArr = $('#wtList li')
+                        var donNumber = 0
+                        domArr.each(function(a){
+                            var dom = domArr[a].id
+                            if($('#'+dom+' .wtTime').text() != 0){
+                                donNumber += 1
+                                return 
+                            }
+                        })
+                        if(donNumber){
+                            $('#wtList').show()
+                        }else{
+                            $('#wtList').hide()
                         }
                     }
                 }
@@ -203,6 +271,8 @@
                 console.log('连接中断');
             }
         }
+
+
 
         function init() {
             var url = location.search.substr(1)
@@ -214,7 +284,7 @@
             }
             map = new Map({
                 dom: 'map',
-                zoom: 14,
+                zoom: 15,
                 center: [d.lng, d.lat]
             })
             map.init()

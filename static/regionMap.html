@@ -12,7 +12,7 @@
 <body>
     <div class="content">
         <div id="map"></div>
-        <div class="legend" id="legend">
+        <div class="legend" id="legend" style="bottom:70px;">
             <ul>
                 
             </ul>
@@ -49,12 +49,12 @@
                                     a.h = 44
                                     a.anchor = [30, 22]
                                 }else{
-                                    str += '<li id="'+a.id+'"><div class="title"><img src="/img/Farm.png"><div>'
-                                            +a.name+'</div></div><div class="number fault"><img src="/img/loading.png">'
-                                            +a.fault+'</div><div class="number hand"><img src="/img/warning.png">'
-                                            +a.warning+'</div><div class="number warning"><img src="/img/iconfont-shandian.png">'
-                                            +a.hand+'</div><div class="number maintain"><img src="/img/weihu.png">'
-                                            +a.maintain+'</div></li>'
+                                    str += '<li id="'+a.id+'"><div class="title"><img width="44px" src="/img/Farm.png"><div>'
+                                            +a.name+'</div></div><div class="number hand"><img src="/img/loading.png"><span>'
+                                            +a.hand+'</span></div><div class="number fault"><img src="/img/warning.png"><span>'
+                                            +a.fault+'</span></div><div class="number warning"><img src="/img/iconfont-shandian.png"><span>'
+                                            +a.warning+'</span></div><div class="number maintain"><img src="/img/weihu.png"><span>'
+                                            +a.maintain+'</span></div></li>'
                                 }
                                         var label = new BMap.Label(a.name,{
                                             position: new BMap.Point(a.longitude, a.latitude),
@@ -109,10 +109,10 @@
                     var obj = JSON.parse(data.data)
                     var datas = obj.datas
                     for(var i=0;i<datas.length;i++){
-                        $('#'+datas[i].id+' .fault').text(datas[i].fault)
-                        $('#'+datas[i].id+' .hand').text(datas[i].hand)
-                        $('#'+datas[i].id+' .warning').text(datas[i].warning)
-                        $('#'+datas[i].id+' .maintain').text(datas[i].maintain)
+                        $('#'+datas[i].id+' .fault>span').text(datas[i].fault)
+                        $('#'+datas[i].id+' .hand>span').text(datas[i].hand)
+                        $('#'+datas[i].id+' .warning>span').text(datas[i].warning)
+                        $('#'+datas[i].id+' .maintain>span').text(datas[i].maintain)
                     }
                 }
             }

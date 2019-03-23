@@ -1,8 +1,8 @@
 const Router = require('koa-router')
 const router = new Router()
-const client = require('./client')
 const {userData, carName} = require('./config.js')
 const request = require('request')
+const event = require('./event.js')
 
 let websocket1 = websocket2 = null
 
@@ -81,23 +81,16 @@ router.all('/getCarList',  ctx => {
     })
 })
 
-client.on('data', data => {
-    try {
-        if(data.length != 4){
-            const data2 = data.toString()
-            const obj = JSON.parse(data2)
-            if(obj.mode == 'updatefarmlist'){
-                if(websocket1){
-                    websocket1.send(data2)
-                }
-            }else if(obj.mode == 'updateturbinelist'){
-                if(websocket2){
-                    websocket2.send(data2)
-                }
-            }
-        }
-    } catch (error) {
-        
+event.on('updatefarmlist', data => {
+    console.log('>>>>>',data);
+    if(websocket1){
+        websocket1.send(data)
+    }
+})
+event.on('updateturbinelist', data => {
+    console.log('>>>>>',data);
+    if(websocket2){
+        websocket2.send(data)
     }
 })
 

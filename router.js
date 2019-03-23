@@ -2,6 +2,8 @@ const Router = require('koa-router')
 const router = new Router()
 const fs = require('fs')
 const client = require('./client')
+const {port2} = require('./config.js')
+const event = require('./event.js')
 
 const send = data => {
     let a =  Buffer.from(JSON.stringify(data))
@@ -27,7 +29,7 @@ router.get('/windMap', async ctx => {
 
 router.post('/map', async ctx => {
     var data = ctx.request.body
-    send({url:`localhost:8081/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
+    send({url:`localhost:${port2}/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
     return ctx.body = {
         msg: '成功',
         code: 200
@@ -42,7 +44,7 @@ router.get('/getAreaList', async ctx => {
     return ctx.body = {
         msg: '成功',
         code: 200,
-        data: JSON.parse(data)
+        data: data
     }  
 })
 
@@ -53,29 +55,34 @@ router.get('/getWorkOrder/:id', async ctx => {
     return ctx.body = {
         msg: '成功',
         code: 200,
-        data: JSON.parse(data)
+        data: data
+    }  
+})
+
+router.get('/getOrder/:id', async ctx => {
+    var id = ctx.params.id
+    send({mode:'wt',id:id})
+    return ctx.body = {
+        msg: '成功',
+        code: 200
     }  
 })
 
 const revied = () => {
     return new Promise((resolve, reject) => {
-        client.on('data', data => {
-            try {
-                if(data.length != 4){
-                    const data2 = data.toString()
-                    console.log(data2);
-                    var obj = JSON.parse(data2)
-
-                    if(obj.mode == 'getaddr'){
-                        send({url:'localhost/regionMap'})
-                    }else if(!obj.mode){
-                        resolve(data2)
-                    }
+        try {
+            event.once('routerData', data => {
+                var obj = JSON.parse(data)
+                if(!obj){
+                    resolve({})
                 }
-            } catch (error) {
-                console.log(error);
-            }
-        })
+                if(!obj.mode){
+                    resolve(obj)
+                }
+            })
+        } catch (error) {
+            console.log(error);
+        }
     })
 }
 
@@ -86,6 +93,5 @@ const pageHtml = url => {
         })
     })
 }
-
 
 module.exports = router

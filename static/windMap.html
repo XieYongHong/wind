@@ -165,7 +165,6 @@
                                     }
                                     
                                     map.addOverlay(new ComplexCustomOverlay(a, map, function(data){
-                                            console.log(data);
                                             getOrderId(data.id)
                                     }))
                                 });
@@ -173,7 +172,6 @@
                                     $('#wtList').hide()
                                 }
                                 $('#wtList ul').append(str)
-                                console.log(point);
                                 map.markersCenter(point)
                             }
                         }
@@ -242,7 +240,6 @@
                                         }
                                         map._map.removeOverlay(list[j])
                                         map.addOverlay(new ComplexCustomOverlay(list[j].data, map, function(data){
-                                            console.log(data);
                                             getOrderId(data.id)
                                         }))
                                         break;

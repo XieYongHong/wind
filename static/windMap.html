@@ -47,17 +47,20 @@
     <script src="js/jquery.min.js"></script>
     <script src="js/map.js"></script>
     <script>
+        
         var map
         var labels = []
+        var ws1 = null
+        var ws2 = null
         var getCarList = function (data) {
-            var ws = new WebSocket('ws://localhost:8081/getCarList')
-            ws.onopen = function () {
+            ws1 = new WebSocket('ws://localhost:8081/getCarList')
+            ws1.onopen = function () {
                 console.log('连接成功');
                 if (data) {
-                    ws.send(JSON.stringify(data))
+                    ws1.send(JSON.stringify(data))
                 }
             }
-            ws.onmessage = function (data) {
+            ws1.onmessage = function (data) {
                 if (data.data) {
                     var arr = JSON.parse(data.data)
                     var datas = []
@@ -103,7 +106,7 @@
                     }, true)
                 }
             }
-            ws.onclose = function () {
+            ws1.onclose = function () {
                 console.log('连接中断');
             }
         }
@@ -165,6 +168,7 @@
                                     }
                                     
                                     map.addOverlay(new ComplexCustomOverlay(a, map, function(data){
+                                            console.log(data.id);
                                             getOrderId(data.id)
                                     }))
                                 });
@@ -180,9 +184,9 @@
         }
         function getOrderId(id){
             $.ajax({
-                type: "get",
-                url: "/getOrder/" + id,
-                data: {},
+                type: "post",
+                url: "/getOrder",
+                data: {id:id},
                 success: function(data){
 
                 }
@@ -192,16 +196,15 @@
             if(time == 0) return 0;
             var day = Math.floor(time / (24 * 60 * 60))
             var hour = Math.floor((time - (day * 24 * 60 * 60)) / (60 * 60))
-            console.log((time - (day * 24 * 60 * 60) - (hour * 60)));
             var min = Math.floor((time - (day * 24 * 60 * 60) - (hour * 60 * 60)) / 60)
             return '预计 ' + day + ' 天 ' + hour + ' 时 ' + min + ' 分后停机'
         }
         var RealTimeMarker = function () {
-            var ws = new WebSocket('ws://localhost:8081/updateturbine')
-            ws.onopen = function () {
+            ws2 = new WebSocket('ws://localhost:8081/updateturbine')
+            ws2.onopen = function () {
                 console.log('连接成功');
             }
-            ws.onmessage = function (data) {
+            ws2.onmessage = function (data) {
                 console.log(data);
                 if (data.data) {
                     var obj = JSON.parse(data.data)
@@ -240,6 +243,7 @@
                                         }
                                         map._map.removeOverlay(list[j])
                                         map.addOverlay(new ComplexCustomOverlay(list[j].data, map, function(data){
+                                            console.log(data.id);
                                             getOrderId(data.id)
                                         }))
                                         break;
@@ -264,7 +268,7 @@
                     }
                 }
             }
-            ws.onclose = function () {
+            ws2.onclose = function () {
                 console.log('连接中断');
             }
         }

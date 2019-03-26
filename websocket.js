@@ -1,7 +1,7 @@
 const Router = require('koa-router')
 const router = new Router()
 const {userData, carName} = require('./config.js')
-const request = require('request')
+const {requestData} = require('./request.js')
 const event = require('./event.js')
 
 let websocket1 = websocket2 = null
@@ -15,6 +15,7 @@ router.all('/updatefarm', ctx => {
         console.log(data);
     })
     ctx.websocket.on('close', e => {
+        console.log('close');
         websocket1 = null
     })
 })
@@ -28,6 +29,7 @@ router.all('/updateturbine', ctx => {
         console.log(data);
     })
     ctx.websocket.on('close', e => {
+        console.log('close');
         websocket2 = null
     })
 })
@@ -75,6 +77,7 @@ router.all('/getCarList',  ctx => {
         }
     })
     ctx.websocket.on('close', e => {
+        console.log('close');
         webStatus = false
         if(timer)
         clearInterval(timer)
@@ -94,14 +97,4 @@ event.on('updateturbinelist', data => {
     }
 })
 
-const requestData = url => {
-    return new Promise((resolve, reject) => {
-        request(url, (error, response, body) => {
-            var data = JSON.parse(body)
-            if(data){
-                resolve(data)
-            }
-        })
-    })
-}
 module.exports = router

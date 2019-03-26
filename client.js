@@ -26,7 +26,7 @@ client.on('error', (e) => {
 })
 client.on('close', (e) => {
     console.log('close')
-    client.setTimeout(10000, function() {
+    client.setTimeout(1000, function() {
         client.connect(port, host);
     })
 })
@@ -54,7 +54,7 @@ client.on('data', data => {
                 if(!obj.mode){
                     event.emit('routerData', bufString)
                 }else if(obj.mode == 'getaddr'){
-                    send({url:`localhost:${port2}/regionMap`})
+                    send({mode:"area_addr",url:`http://localhost:${port2}/regionMap`})
                 }else if(obj.mode == 'updatefarmlist'){
                     event.emit('updatefarmlist', bufString)
                 }else if(obj.mode == 'updateturbinelist'){

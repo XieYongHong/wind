@@ -29,7 +29,7 @@ router.get('/windMap', async ctx => {
 
 router.post('/map', async ctx => {
     var data = ctx.request.body
-    send({url:`localhost:${port2}/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
+    send({mode:'area_click',id:data.id,url:`http://localhost:${port2}/windMap?id=${data.id}&lng=${data.lng}&lat=${data.lat}`})
     return ctx.body = {
         msg: '成功',
         code: 200
@@ -59,9 +59,9 @@ router.get('/getWorkOrder/:id', async ctx => {
     }  
 })
 
-router.get('/getOrder/:id', async ctx => {
-    var id = ctx.params.id
-    send({mode:'wt',id:id})
+router.post('/getOrder', ctx => {
+    var id = ctx.request.body.id
+    send({mode:'farm_click',id:id})
     return ctx.body = {
         msg: '成功',
         code: 200

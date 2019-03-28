@@ -46,6 +46,7 @@ client.on('data', data => {
             bufLength += data.length
             const data2 = buf1.toString()
             bufString += data2
+            console.log(data2);
             if(bufLength == length){
                 var obj = JSON.parse(bufString)
                 if(!obj){
@@ -59,6 +60,10 @@ client.on('data', data => {
                     event.emit('updatefarmlist', bufString)
                 }else if(obj.mode == 'updateturbinelist'){
                     event.emit('updateturbinelist', bufString)
+                }else if(obj.mode == 'quitfarm'){
+                    event.emit('closeWind', false)
+                }else if(obj.mode == 'quitarea'){
+                    event.emit('closeRegion', false)
                 }
             }
         }

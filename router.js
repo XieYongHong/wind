@@ -11,7 +11,9 @@ const send = data => {
     buf1[3] = a.length
     buf1.write(JSON.stringify(data),4,a.length)
     console.log(buf1.toString());
-    client.write(buf1)
+    if(client._handle){
+        client.write(buf1)
+    }
 }
 
 //返回页面

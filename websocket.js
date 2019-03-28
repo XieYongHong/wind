@@ -4,7 +4,8 @@ const {userData, carName} = require('./config.js')
 const {requestData} = require('./request.js')
 const event = require('./event.js')
 
-let websocket1 = websocket2 = null
+let websocket1 = null
+let websocket2 = null
 
 router.all('/updatefarm', ctx => {
     websocket1 = ctx.websocket
@@ -15,7 +16,7 @@ router.all('/updatefarm', ctx => {
         console.log(data);
     })
     ctx.websocket.on('close', e => {
-        console.log('close');
+        console.log('updatefarm close');
         websocket1 = null
     })
 })
@@ -29,7 +30,7 @@ router.all('/updateturbine', ctx => {
         console.log(data);
     })
     ctx.websocket.on('close', e => {
-        console.log('close');
+        console.log('updateturbine close');
         websocket2 = null
     })
 })
@@ -37,24 +38,24 @@ router.all('/updateturbine', ctx => {
 router.all('/getCarList',  ctx => {
     console.log(userData);
     var timer = null
-    
     ctx.websocket.on('message', async e => {
         console.log(e);
         if(e){
             const url = `http://${userData.WebServer}/MobileApi/MobileService.ashx?method=getMyDevicesInfo&customID=${userData.customID}&serviceKey=${userData.servceKey}&customType=1`
             const obj = await requestData(url)
             let webStatus = true
-            let _data = null
+            let _data = []
 
             for(var item in obj){
                 if(item.indexOf(carName) != -1){
-                    _data = obj[item]
+                    _data.push(obj[item])
                 }
             }
 
             
             async function getCar(data){
                 let arr = []
+
                 for(let j=0;j<data.length;j++){
                     for(let i=0;i<_data.length;i++){
                         if(data[j] == _data[i].VehicleNO){
@@ -77,7 +78,7 @@ router.all('/getCarList',  ctx => {
         }
     })
     ctx.websocket.on('close', e => {
-        console.log('close');
+        console.log('upcar close');
         webStatus = false
         if(timer)
         clearInterval(timer)
@@ -85,15 +86,27 @@ router.all('/getCarList',  ctx => {
 })
 
 event.on('updatefarmlist', data => {
-    console.log('>>>>>',data);
+    console.log('1 >>>>>',data);
     if(websocket1){
         websocket1.send(data)
     }
 })
 event.on('updateturbinelist', data => {
-    console.log('>>>>>',data);
+    console.log('2 >>>>>',data);
     if(websocket2){
         websocket2.send(data)
+    }
+})
+event.on('closeWind', data => {
+    console.log('3 >>>>>',data);
+    if(websocket2){
+        websocket2.send('{"type":true}')
+    }
+})
+event.on('closeRegion', data => {
+    console.log('4 >>>>>',data);
+    if(websocket1){
+        websocket1.send('{"type":true}')
     }
 })
 

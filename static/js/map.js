@@ -225,11 +225,11 @@ Map.prototype.addOverlay = function(data){
 }
 Map.prototype.markersCenter = function(data){
     if(data.length){
+        console.log(data);
         var arr = []
         data.forEach(function(a){
             arr.push(new BMap.Point(a.longitude, a.latitude))
         });
-        console.log(arr);
         this._map.setViewport(arr)
     }
 }
@@ -254,6 +254,7 @@ ComplexCustomOverlay.prototype.initialize = function(map){
     div.style.color = "#ffffff"
     div.style.width = this.data.w + 'px'
     div.style.height = '70px'
+    div.style.cursor = 'pointer'
     img.style.height = this.data.h + 'px'
     img.style.background = 'url('+this.data.iconUrl+') no-repeat'
     id.innerText = this.data.name

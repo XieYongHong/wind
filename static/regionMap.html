@@ -22,11 +22,17 @@
     <script src="js/jquery.min.js"></script>
     <script src="js/map.js"></script>
     <script>
+
+        $('#legend ul').on('click','img',function(){
+            var id = $(this).attr('data-id')
+            console.log(id);
+            markerClick(id)
+        })
         var map = new Map({
             dom: 'map'
         })
         map.init()
-        
+        var ws = null
         var getMarkers = function(){
             $.ajax({
                 type: "get",
@@ -36,70 +42,84 @@
                         var datas = data.data
                         var arr = []
                         var str = ''
-                        if(datas.length){
-                            datas.forEach(function(a){
-                                
-                                a.iconUrl = '/img/Farm.png'
-                                a.w = 52
-                                a.h = 49
-                                a.anchor = [25, 25]
-                                if(a.type == 2){
-                                    a.iconUrl = '/img/SpareParts.png'
-                                    a.w = 61
-                                    a.h = 44
-                                    a.anchor = [30, 22]
-                                }else{
-                                    str += '<li id="'+a.id+'"><div class="title"><img width="44px" src="/img/Farm.png"><div>'
-                                            +a.name+'</div></div><div class="number hand"><img src="/img/loading.png"><span>'
-                                            +a.hand+'</span></div><div class="number fault"><img src="/img/warning.png"><span>'
-                                            +a.fault+'</span></div><div class="number warning"><img src="/img/iconfont-shandian.png"><span>'
-                                            +a.warning+'</span></div><div class="number maintain"><img src="/img/weihu.png"><span>'
-                                            +a.maintain+'</span></div></li>'
-                                }
-                                        var label = new BMap.Label(a.name,{
-                                            position: new BMap.Point(a.longitude, a.latitude),
-                                            offset: new BMap.Size(-31, 30)
-                                        })
-                                        label.setStyle({
-                                            color : "#fff",
-                                            fontSize : "12px",
-                                            height : "20px",
-                                            lineHeight : "20px",
-                                            fontFamily:"微软雅黑",
-                                            border:'none',
-                                            backgroundColor:'transparent'
-                                        });
-                                        map._map.addOverlay(label)
-                                arr.push(a)
-                            });
-                            $('#legend ul').append(str)
-                            map.addMarker(arr, function(data){
-                                console.log(data);
-                                if(data){
-                                    if(data.type != 2){
-                                        $.ajax({
-                                            type: 'post',
-                                            url: 'map',
-                                            data: {
-                                                id:data.id,
-                                                lng:data.longitude,
-                                                lat:data.latitude,
-                                            },
-                                            success: function(data){
-
-                                            }
-                                        })
+                        if(datas){
+                            if(datas.length){
+                                datas.forEach(function(a){
+                                    
+                                    a.iconUrl = '/img/Farm.png'
+                                    a.w = 52
+                                    a.h = 49
+                                    a.anchor = [25, 25]
+                                    if(a.type == 2){
+                                        a.iconUrl = '/img/SpareParts.png'
+                                        a.w = 61
+                                        a.h = 44
+                                        a.anchor = [30, 22]
+                                    }else{
+                                        str += '<li id="'+a.id+'"><div class="title"><img data-id="'+a.id+'" width="44px" src="/img/Farm.png"><div>'
+                                                +a.name+'</div></div><div class="number hand"><img src="/img/loading.png"><span>'
+                                                +a.hand+'</span></div><div class="number fault"><img src="/img/warning.png"><span>'
+                                                +a.fault+'</span></div><div class="number warning"><img src="/img/iconfont-shandian.png"><span>'
+                                                +a.warning+'</span></div><div class="number maintain"><img src="/img/weihu.png"><span>'
+                                                +a.maintain+'</span></div></li>'
                                     }
-                                }
-                            })
+                                            var label = new BMap.Label(a.name,{
+                                                position: new BMap.Point(a.longitude, a.latitude),
+                                                offset: new BMap.Size(-31, 30)
+                                            })
+                                            label.setStyle({
+                                                color : "#fff",
+                                                fontSize : "12px",
+                                                height : "20px",
+                                                lineHeight : "20px",
+                                                fontFamily:"微软雅黑",
+                                                border:'none',
+                                                backgroundColor:'transparent'
+                                            });
+                                            map._map.addOverlay(label)
+                                    arr.push(a)
+                                });
+                                $('#legend ul').append(str)
+                                map.addMarker(arr, function(data){
+                                    console.log(data);
+                                    if(data){
+                                        if(data.type != 2){
+                                            $.ajax({
+                                                type: 'post',
+                                                url: 'map',
+                                                data: {
+                                                    id:data.id,
+                                                    lng:data.longitude,
+                                                    lat:data.latitude,
+                                                },
+                                                success: function(data){
+
+                                                }
+                                            })
+                                        }
+                                    }
+                                })
+                            }
                         }
                     }
                 }
             });
         }
-
+        function markerClick(id){
+            $.ajax({
+                type: 'post',
+                url: 'map',
+                data: {
+                    id:id,
+                    lng:'105',
+                    lat:'32',
+                },
+                success: function(data){
+                }
+            })
+        }
         var RealTimeMarker = function() {
-            var ws = new WebSocket('ws://localhost:8081/updatefarm')
+            ws = new WebSocket('ws://localhost:8081/updatefarm')
             ws.onopen = function(){
                 console.log('连接成功');
             }
@@ -107,6 +127,13 @@
                 console.log(data.data);
                 if(data.data){
                     var obj = JSON.parse(data.data)
+                    if(obj.type){
+                        if(ws){
+                            ws.close()
+                            ws = null
+                        }
+                        return
+                    }
                     var datas = obj.datas
                     for(var i=0;i<datas.length;i++){
                         $('#'+datas[i].id+' .fault>span').text(datas[i].fault)

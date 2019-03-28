@@ -61,6 +61,7 @@
                 }
             }
             ws1.onmessage = function (data) {
+                console.log(data);
                 if (data.data) {
                     var arr = JSON.parse(data.data)
                     var datas = []
@@ -120,63 +121,65 @@
                         if (data.code == 200) {
                             var datas = data.data.farm
                             getCarList(data.data.car)
-                            var arr = []
-                            var str = ''
-                            var showNumber = 0
-                            var point = []
-                            if (datas.length) {
-                                datas.forEach(function (a) {
+                            if(datas){
+                                var arr = []
+                                var str = ''
+                                var showNumber = 0
+                                var point = []
+                                if (datas.length) {
+                                    datas.forEach(function (a) {
 
-                                    if (a.type == 1) {
-                                        switch (a.status) {
-                                            case 1:// 无工单
-                                                a.iconUrl = '/img/WT_Normal.png'
-                                                break;
-                                            case 2: // 故障
-                                                a.iconUrl = '/img/WT_Erro.png'
-                                                break;
-                                            case 3:// 预警
-                                                a.iconUrl = '/img/WT_Warning.png'
-                                                break;
-                                            case 4:// 运维
-                                                a.iconUrl = '/img/WT_Maintain.png'
-                                                break;
-                                            case 0:
-                                                a.iconUrl = '/img/WT_Offline.png'
-                                                break;
+                                        if (a.type == 1) {
+                                            switch (a.status) {
+                                                case 1:// 无工单
+                                                    a.iconUrl = '/img/WT_Normal.png'
+                                                    break;
+                                                case 2: // 故障
+                                                    a.iconUrl = '/img/WT_Erro.png'
+                                                    break;
+                                                case 3:// 预警
+                                                    a.iconUrl = '/img/WT_Warning.png'
+                                                    break;
+                                                case 4:// 运维
+                                                    a.iconUrl = '/img/WT_Maintain.png'
+                                                    break;
+                                                case 0:
+                                                    a.iconUrl = '/img/WT_Offline.png'
+                                                    break;
+                                            }
+                                            a.w = 36
+                                            a.h = 70
+                                            a.anchor = [18, 68]
+                                            point.push(a)
+                                            if(a.time){
+                                                showNumber += 1
+                                            }
+                                            str += '<li id="' + a.id + '" style="display:'+(a.time >0 ? 'block' : 'none')+'"><span>' + a.name +
+                                                '</span><span class="wtTime">' + handTime(a.time) + '</span></li>'
+                                        } else if (a.type == 3) {
+                                            point.push(a)
+                                            a.iconUrl = '/img/SpareParts.png'
+                                            a.w = 61
+                                            a.h = 44
+                                            a.anchor = [30, 22]
+                                        } else if (a.type == 2) {
+                                            a.iconUrl = '/img/Service_station.png'
+                                            a.w = 73
+                                            a.h = 64
+                                            a.anchor = [36, 32]
                                         }
-                                        a.w = 36
-                                        a.h = 70
-                                        a.anchor = [18, 68]
-                                        point.push(a)
-                                        if(a.time){
-                                            showNumber += 1
-                                        }
-                                        str += '<li id="' + a.id + '" style="display:'+(a.time >0 ? 'block' : 'none')+'"><span>' + a.name +
-                                            '</span><span class="wtTime">' + handTime(a.time) + '</span></li>'
-                                    } else if (a.type == 3) {
-                                        a.iconUrl = '/img/SpareParts.png'
-                                        a.w = 61
-                                        a.h = 44
-                                        a.anchor = [30, 22]
-                                    } else if (a.type == 2) {
-                                        point.push(a)
-                                        a.iconUrl = '/img/Service_station.png'
-                                        a.w = 73
-                                        a.h = 64
-                                        a.anchor = [36, 32]
+                                        
+                                        map.addOverlay(new ComplexCustomOverlay(a, map, function(data){
+                                                console.log(data.id);
+                                                getOrderId(data.id)
+                                        }))
+                                    });
+                                    if(!showNumber){
+                                        $('#wtList').hide()
                                     }
-                                    
-                                    map.addOverlay(new ComplexCustomOverlay(a, map, function(data){
-                                            console.log(data.id);
-                                            getOrderId(data.id)
-                                    }))
-                                });
-                                if(!showNumber){
-                                    $('#wtList').hide()
+                                    $('#wtList ul').append(str)
+                                    map.markersCenter(point)
                                 }
-                                $('#wtList ul').append(str)
-                                map.markersCenter(point)
                             }
                         }
                     }
@@ -208,8 +211,19 @@
                 console.log(data);
                 if (data.data) {
                     var obj = JSON.parse(data.data)
+                    if(obj.type) {
+                        if(ws1){
+                            ws1.close()
+                        }
+                        if(ws2){
+                            ws2.close()
+                        }
+                        ws1 = null
+                        ws2 = null
+                        return 
+                    }
                     var datas = obj.datas
-                    if (map) {
+                    if (map && datas) {
                         var list = map._map.getOverlays()
                         for (var i = 0; i < datas.length; i++) {
                             for (var j = 0; j < list.length; j++) {
